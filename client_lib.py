@@ -1,53 +1,51 @@
 import numpy as np
-#import plukas as p
+import pLukas as p
 import sys
 from os import walk
 from os import listdir
 import json
+import shutil
 
-def DB():
-    tree = listdir('.')
-    found  = 0
-    for i in xrange(len(tree)):
-        if(tree[i] == "dbFile.json"):
-            found = 1
-            bd = loadDB()
-    if(not found):
-        bd = createDB()
-    return found,bd
+#def listLocalTree(startpath):
+#    for root, dirs, files in os.walk(startpath):
+#        level = root.replace(startpath, '').count(os.sep)
+#        indent = ' ' * 4 * (level)
+#        print('{}{}/'.format(indent, os.path.basename(root)))
+#        subindent = ' ' * 4 * (level + 1)
+#        for f in files:
+#            print('{}{}'.format(subindent, f))
+def checkDir():
+    print listdir('.')
 
-def createDB():
-    obj = []
-    strDB = json.dumps(obj)
-    fDB = open("dbFile.json", 'w')
-    fDB.write(strDB)
-    fDB.close()
-    return obj
+    #print 
 
-def saveDB(profile):
-    db = []
-    found, database = DB()
-    db = database
-    with open('dbFile.json','w') as outfile:
-        db.append(profile)
-        outfile.write(json.dumps(db,indent = True))
 
-def loadDB():
-    with open('dbFile.json','r') as infile:
-        data = json.loads(infile.read())
-    return data
+def moveDir(orig, dest):
+    source = istdir(orig)
+    for files in source:
+        shutil.move(files,dest)
 
-def list_files(startpath):
-    for root, dirs, files in os.walk(startpath):
-        level = root.replace(startpath, '').count(os.sep)
-        indent = ' ' * 4 * (level)
-        print('{}{}/'.format(indent, os.path.basename(root)))
-        subindent = ' ' * 4 * (level + 1)
-        for f in files:
-            print('{}{}'.format(subindent, f))
+def moveSameTypeFile(extension,orig,dest):
+    source = listdir(orig)
+    for files in source:
+        if files.endswith(extension):
+            shutil.move(files,dest)
+def moveFile(file,orig,dest):
+        shutil.move(file,dest)
+
+def copyTree(SOURCE,BACKUP):
+    # create a backup directory
+    shutil.copytree(SOURCE, BACKUP)
+    print listdir(BACKUP)
+
+def dellTree(dir):
+    shutil.rmtree(dir)
 
 if __name__ == "__main__":
     sys.exit(main(sys.args))
 
 def main(*args):
     pass
+## references:
+#http://www.pythonforbeginners.com/os/python-the-shutil-module
+#
