@@ -1,5 +1,5 @@
 import numpy as np
-import pLukas as p
+import pLukas as pl
 import sys
 from os import walk
 from os import listdir
@@ -11,15 +11,14 @@ from os import getcwd
 import errno
 import json
 import shutil
+# {'user': user, 'password': password,
+#'IP': ip, 'Port': port,'command': None,'data': None, 'path': None}
 
-#def listLocalTree(startpath):
-#    for root, dirs, files in os.walk(startpath):
-#        level = root.replace(startpath, '').count(os.sep)
-#        indent = ' ' * 4 * (level)
-#        print('{}{}/'.format(indent, os.path.basename(root)))
-#        subindent = ' ' * 4 * (level + 1)
-#        for f in files:
-#            print('{}{}'.format(subindent, f))
+def checkUserName(user, password, IP, PORT):
+    pl.connectionClient(user, password, IP, PORT)
+    file = pl.receiveFile()
+    return file['data']
+    
 def checkDir():
     dir = listdir('.')
     for i in dir:
@@ -82,20 +81,6 @@ def mkDir(directory):
             print "Directory already exist!\n"
         else:
             print "Invalid Argument.\n"
-
-def moveSameTypeFile(extension,orig,dest):
-    source = listdir(orig)
-    for files in source:
-        if files.endswith(extension):
-            shutil.move(files,dest)
-
-def copyTree(SOURCE,BACKUP):
-    # create a backup directory
-    shutil.copytree(SOURCE, BACKUP)
-    print listdir(BACKUP)
-
-def dellTree(dir):
-    shutil.rmtree(dir)
 
 if __name__ == "__main__":
     sys.exit(main(sys.args))

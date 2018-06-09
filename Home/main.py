@@ -2,26 +2,20 @@
 # coding=utf-8
 from time import sleep
 import client_lib as cl
-import server_lib as ser
+#import server_lib as ser
 import os
 import sys
 
-def login(status,strikes):
+def login(status,strikes,ip,port):
     choise = str(raw_input("Press 'l' to Login or 's' to Sign in.\n"))
     if choise == 'l' or choise == 'L':
-        foundDB, db = ser.DB()
-        user = str(raw_input("User name:"))
+        user = str(raw_input("User name:" ))
         password = str(raw_input("Password:"))
-        status = verify(db,user,password)
-        if status != 1:
-            print "Registering User. Login done! Trying connection..."
-            ser.saveDB({"User name": user, "Password": password})
-            status = 1
+        status = cl.checkUserName(user, password,ip,port)
     elif choise == 's' or choise == 'S':
         user = str(raw_input("Set users name:"))
         password = str(raw_input("Set password:"))
-        ser.saveDB({"User name": user, "Password": password})
-        status = 1
+        status = cl.checkUserName(user,password,ip,port)
     else:
         if strikes < 2:
             print("Invalid input. Please enter valid ones..\n")
@@ -29,24 +23,16 @@ def login(status,strikes):
         strikes+=1
     return status,strikes
 
-def verify(db,user,password):
-    status = -1
-    for i in xrange(len(db)):
-        if db[i]['User name'] == user and db[i]['Password'] == password:
-            print "Login successfull. Trying conection..."
-            status = 1
-    return status
-
 def listCommand():
     print "\n\nCommand List:\n\n"
-    print "checkdir -> List folders and files in the current directory."
-    print "cd path_to_dir -> Acess directory 'path_to_dir'."
-    print "mv file dest_dir -> Move 'file' to 'dest_dir'."
-    print "rm file -> Remove 'file'."
-    print "makedir dirname -> Creates 'dirname' directory."
+    print "checkdir            -> List folders and files in the current directory."
+    print "cd path_to_dir      -> Acess directory 'path_to_dir'."
+    print "mv file dest_dir    -> Move 'file' to 'dest_dir'."
+    print "rm file             -> Remove 'file'."
+    print "makedir dirname     -> Creates 'dirname' directory."
     print "upload path_to_file -> Upload file in 'path_to_file' directory to server."
-    print "download file -> Download 'file' to local."
-    print "exit -> Logout.\n"
+    print "download file       -> Download 'file' to local."
+    print "exit                -> Logout.\n"
 
 def exception(c):
     if c != 'help':
@@ -78,21 +64,21 @@ def main(*args):
         PORT = sys.argv[2]
         user = sys.argv[3]
         password = sys.argv[4]
-        foundDB, db = ser.DB()
-        status = verify(db,user,password)
+        #foundDB, db = ser.DB()
+        #status = ser.verify(db,user,password)
         sleep(1.5)
     else:
         status = -1
         strikes = 0
         while(status!=1):
-            status,strikes = login(status,strikes)
+            status,strikes = login(status,strikes,IP,PORT) ###
             if(strikes == 3):
                 print "Wrong input."
                 exit()
-        #cl.conection()
     os.system('cls' if os.name == 'nt' else 'clear')
     print "Welcome!\nEnter 'help' to see all options."
     while(status):
+        cl.conection(name,password)
         command = raw_input(cl.printDir())
         command, arg = exception(command)
         if command == 'help':
