@@ -59,7 +59,7 @@ def main(*args):
     print "\n\n"
     IP = "127.0.0.0.1"
     PORT = "1234"
-    if sys.argv != [] or len(sys.argv) != 2:
+    if len(sys.argv) > 1:
         IP = sys.argv[1]
         PORT = sys.argv[2]
         user = sys.argv[3]

@@ -6,22 +6,37 @@ from os import listdir
 from os import chdir
 import json
 
-def service():
-    file = pl.receiveFile()
+def service(refSocket,clientData):
+    print "Server initialized.\n\n\n"
+    ip,port = clientData
+    file = pl.receiveFile(ip,port)
     status = login(file['name'],file['password'])
-    ip,port = pl.IP()
-    file = pl.message([None,None,ip,port,None,None,status,None])
+    file = pl.message([None,None,None,ip,port,None,status,None])
     pl.sendFile(file)
     if status:
-        while file['command']=='exit':
-            file = pl.receiveFile()
-            
+        while file['command']!='exit':
+            file = pl.receiveFile(ip,port)
+
 def login(name, password):
     foundDB, db = DB()
     status = verify(db,user,password)
     if status != 1:
         print "Registering User. Login done! Trying connection..."
         saveDB({"User name": user, "Password": password})
+        status = 1
+    return status
+
+def verify(db,user,password):
+    status = -1
+    for i in xrange(len(db)):
+        if db[i]['User name'] == user and db[i]['Password'] == password:
+            print "Login successfull. Trying conection..."
+            status = 1
+        elif db[i]['User name'] == user and db[i]['Password'] != password:
+            print "Bad Argument."
+            status = -1
+    if [pos for pos, char in enumerate(db['User name']) if char == user] == -1:
+        saveDB({'User name': user, 'Password': password})
         status = 1
     return status
 
@@ -67,20 +82,6 @@ def tree():
         bd = createDB()
     return found,bd
 
-#def treeFile():
-def verify(db,user,password):
-    status = -1
-    for i in xrange(len(db)):
-        if db[i]['User name'] == user and db[i]['Password'] == password:
-            print "Login successfull. Trying conection..."
-            status = 1
-        elif db[i]['User name'] == user and db[i]['Password'] != password:
-            print "Bad Argument."
-            status = -1
-    if [pos for pos, char in enumerate(db['User name']) if char == user] == -1:
-        saveDB({'User name': user, 'Password': password})
-        status = 1
-    return status
 #### File Manipulation
 def checkDir():
     dir = listdir('.')
@@ -111,18 +112,7 @@ def goToDir(arg):
     if arg[0] == '..':
         dirpath = getcwd()
         print dirpath
-    #    dir = printDir()
-    #    dir = dir.split('$')
-    #    dir = dir[0]
-    #    dir = dir.split('/')
-    #    i = 1
-    #    for i in xrange(len(dir)-1):
-    #        dir_path += ('/'+dir[i])
-    #    dir_path = dir_path.split('~')
-    #    dir = dir_path[-1]
-    #    print dir
-    #    goToDir(dir)
-    #else:
+    print arg[0]
     chdir(arg[0]) #path
 
 

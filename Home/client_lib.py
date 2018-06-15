@@ -16,9 +16,11 @@ import shutil
 
 def checkUserName(user, password, IP, PORT):
     pl.connectionClient(user, password, IP, PORT)
-    file = pl.receiveFile()
+    # Handshake
+    pl.sendFile(file = {'user': user, 'password': password, 'IP': IP, 'Port': PORT,'command': None,'Argument':None,'data': None, 'path': None})
+    file = pl.receiveFile('127.0.0.1',1234)
     return file['data']
-    
+
 def checkDir():
     dir = listdir('.')
     for i in dir:
@@ -44,20 +46,6 @@ def moveFile(args):
     shutil.move(file,dest)
 
 def goToDir(arg):
-    #dir_path = ""
-    #if arg[0] == '..':
-    #    dir = printDir()
-    #    dir = dir.split('$')
-    #    dir = dir[0]
-    #    dir = dir.split('/')
-    #    i = 1
-    #    for i in xrange(len(dir)-1):
-    #        dir_path += ('/'+dir[i])
-    #    dir_path = dir_path.split('~')
-    #    dir = dir_path[-1]
-    #    print dir
-    #    goToDir(dir)
-    #else:
     chdir(arg[0]) #path
 
 
