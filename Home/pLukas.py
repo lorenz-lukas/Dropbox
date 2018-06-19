@@ -9,7 +9,6 @@ from threading import Thread #https://www.tutorialspoint.com/python/python_multi
 #from datetime import datetime
 #datetime.utcnow()
 ### Baseado no HTTP com uso de sockets e TCP
-client_soc = socket(AF_INET,SOCK_STREAM)
 server_soc = socket(AF_INET,SOCK_STREAM)
 def get():
     pass
@@ -36,44 +35,42 @@ def connectionServer():
         print "Waiting connection...\n\n"
         while True:
             ref_socket, client = soc.accept() # Refsocket, ClientIP/PORT
-            client_handler = Thread(
-            target=ser.service,
-            args=(ref_socket, client,)
-            )
+            client_handler = Thread(target=ser.service,args=(ref_socket, client, ref_socket,))
             client_handler.start()
     except KeyboardInterrupt as e:
-        soc.close()
+        ref_socket.close()
+        client_handler.exit()
         print "Exiting..."
         sys.exit()
     finally:
         print "Error: Unable to connect to server."
 
-def connectionClient(user,password,ip,PORT):
-    global client_soc
+def connectionClient():
+    client_soc = socket(AF_INET,SOCK_STREAM)
     ip = '127.0.0.1'
     port = 1234
     client_soc.connect((ip,port))
+    return client_soc
     #soc.close()
 
-def receiveFile(ip,port):
-    global client_soc, server_soc
+def receiveFile(ip,port,ref_soc):
     if ip == '127.0.0.1': # IP_dest
-        soc = client_soc
-        print 'cade'
+        soc = connectionClient()
     else:
-        soc = server_soc
+        soc = ref_soc
     len = soc.recv(4096)
+    print len
     file = soc.recv(int(len))
     file = json.loads(file.decode('utf-8'))
+    if ip == '127.0.0.1':
+        soc.close()
     return file
 
-def sendFile(file):
-    global client_soc, server_soc
+def sendFile(file,ref_soc):
     if file['IP'] == '127.0.0.1': # IP_dest
-        soc = client_soc
-        print 'oi'
+        soc = connectionClient()
     else:
-        soc = server_soc
+        soc = ref_soc
     ip = file['IP']
     port = file['Port']
     string = json.dumps(file)
@@ -81,6 +78,8 @@ def sendFile(file):
     len_file = len(file)
     soc.send(str(len_file))
     soc.send(string)
+    if ip == '127.0.0.1':
+        soc.close()
 
 ### IP Loop-back - servidor local: 127.0.0.1
 if __name__ == "__main__":

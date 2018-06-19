@@ -55,9 +55,10 @@ def main(*args):
     print "################################################################"
     print "                     DropBox service                            "
     print "                       python 2.7                               "
+    print "                     Client interface                           "
     print "################################################################"
     print "\n\n"
-    IP = "127.0.0.0.1"
+    IP = "127.0.0.1"
     PORT = "1234"
     if len(sys.argv) > 1:
         IP = sys.argv[1]

@@ -15,10 +15,12 @@ import shutil
 #'IP': ip, 'Port': port,'command': None,'data': None, 'path': None}
 
 def checkUserName(user, password, IP, PORT):
-    pl.connectionClient(user, password, IP, PORT)
+    soc = None
     # Handshake
-    pl.sendFile(file = {'user': user, 'password': password, 'IP': IP, 'Port': PORT,'command': None,'Argument':None,'data': None, 'path': None})
-    file = pl.receiveFile('127.0.0.1',1234)
+    message = {'user': user, 'password': password, 'IP': IP, 'Port': PORT,'command': None,'Argument':None,'data': None, 'path': None}
+    pl.sendFile(message, soc)
+    file = pl.receiveFile('127.0.0.1',1234,soc)
+    print 'ok'
     return file['data']
 
 def checkDir():

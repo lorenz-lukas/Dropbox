@@ -6,16 +6,19 @@ from os import listdir
 from os import chdir
 import json
 
-def service(refSocket,clientData):
+def service(refSocket,clientData,socket):
     print "Server initialized.\n\n\n"
     ip,port = clientData
-    file = pl.receiveFile(ip,port)
+    file = pl.receiveFile(ip,port,socket)
     status = login(file['name'],file['password'])
     file = pl.message([None,None,None,ip,port,None,status,None])
-    pl.sendFile(file)
+    pl.sendFile(file,socket)
     if status:
         while file['command']!='exit':
-            file = pl.receiveFile(ip,port)
+            file = pl.receiveFile(ip,port,socket)
+            print 'oi123'
+
+    socket.close()
 
 def login(name, password):
     foundDB, db = DB()
