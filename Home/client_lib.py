@@ -11,15 +11,13 @@ from os import getcwd
 import errno
 import json
 import shutil
-# {'user': user, 'password': password,
-#'IP': ip, 'Port': port,'command': None,'data': None, 'path': None}
 
 def checkUserName(user, password, IP, PORT):
-    soc = None
+    soc = pl.connectionClient()
     # Handshake
-    message = {'user': user, 'password': password, 'IP': IP, 'Port': PORT,'command': None,'Argument':None,'data': None, 'path': None}
-    pl.sendFile(message, soc)
-    file = pl.receiveFile('127.0.0.1',1234,soc)
+    message = {'user': user, 'password': password, 'IP': '0.0.0.0', 'Port': PORT,'command': None,'Argument':None,'data': None, 'path': None}
+    pl.sendFile(message,soc)
+    file = pl.receiveFile(soc)
     print 'ok'
     return file['data']
 

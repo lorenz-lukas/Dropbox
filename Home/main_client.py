@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 # coding=utf-8
-from time import sleep
 import client_lib as cl
 #import server_lib as ser
 import os
@@ -65,21 +64,16 @@ def main(*args):
         PORT = sys.argv[2]
         user = sys.argv[3]
         password = sys.argv[4]
-        #foundDB, db = ser.DB()
-        #status = ser.verify(db,user,password)
-        sleep(1.5)
     else:
         status = -1
         strikes = 0
-        while(status!=1):
-            status,strikes = login(status,strikes,IP,PORT) ###
-            if(strikes == 3):
-                print "Wrong input."
-                exit()
+        status,strikes = login(status,strikes,IP,PORT) ###
+        if(status != 1):
+            print "Wrong input."
+            exit()
     os.system('cls' if os.name == 'nt' else 'clear')
     print "Welcome!\nEnter 'help' to see all options."
     while(status):
-        cl.conection(name,password)
         command = raw_input(cl.printDir())
         command, arg = exception(command)
         if command == 'help':
