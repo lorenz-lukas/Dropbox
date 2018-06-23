@@ -2,28 +2,14 @@
 import socket
 from os import walk
 from os import listdir
+from os import chdir
+from time import sleep
 import json
 import sys
-#from threading import Thread #https://www.tutorialspoint.com/python/python_multithreading.htm
 import thread
 import server_lib as sr
-from time import sleep
-#{'op': op_name,'file' : file.encode('base64'), 'path': path_name, 'user', int_user}
-#from datetime import datetime
-#datetime.utcnow()
-### Baseado no HTTP com uso de sockets e TCP
-server_soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-def get():
-    pass
-def post():
-    pass
-def update():
-    pass
-def delete():
-    pass
-def error():
-    pass
 
+server_soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 def message(arg):
     return {'user': arg[0], 'password': arg[1],'IP': arg[2], 'Port': arg[3],'command': arg[4],'Argument':arg[5],'data': arg[6], 'path': arg[7]}
 
@@ -37,7 +23,7 @@ def service(refSocket,clientData,server_soc):
     file = message([file['user'],file['password'],ip,port,None,None,status,None])
     sendFile(file,refSocket)
     sr.mkDir(file['user'])
-    sr.goToDir(file['user'],refSocket)
+    chdir(file['user'])
     if status:
         while file['command']!='exit':
             sleep(0.1) #sync
@@ -51,9 +37,10 @@ def service(refSocket,clientData,server_soc):
             elif file['command'] == 'mv':
                 sr.moveFile(file,refSocket)
             elif file['command'] == 'cd':
-                sr.goToDir(file,refSocket)
+                #current_directory = sr.goToDir(file)
+                chdir(file['Argument'])
             elif file['command'] == "makedir":
-                sr.mkDir(file,refSocket)
+                sr.mkDir(file['Argument'])
             elif file['command'] == "upload":
                 pass
             elif file['command'] == "download":
@@ -74,14 +61,6 @@ def connectionServer():
     server_soc.close()
     print "Exiting..."
     sys.exit()
-
-def connectionClient():
-    client_soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    ip = '127.0.0.1'
-    port = 1234
-    client_soc.connect((ip,port))
-    return client_soc
-    #soc.close()
 
 def receiveFile(soc):
     len = soc.recv(1024)

@@ -26,8 +26,8 @@ def checkDir(soc,user_data):
     pl.sendFile(user_data,soc)
     user_data = pl.receiveFile(soc)
     dir = user_data['data']
-    for i in dir:
-        print i
+    #for i in dir:
+    #    print i
 
 def removeFile(file_name,soc,user_data):
     user_data['command'] = 'rm'
@@ -61,14 +61,28 @@ def printDir():
                 pth +=('/'+i)
     return (pth + '$' + ' Set command: ')
 
-def mkDir(directory):
-    try:
-        makedirs(directory[0])
-    except OSError as e:
-        if e.errno != errno.EEXIST:
-            print "Directory already exist!\n"
-        else:
-            print "Invalid Argument.\n"
+def mkDir(args,soc,user_data):
+    user_data['command'] = 'mkdir'
+    user_data['Argument'] = args
+    pl.sendFile(user_data,soc)
+
+def upload(file_name,soc,user_data):
+    shutil.make_archive(file_name,
+                    'zip',
+                    '/home/code/',
+                    'test_dicoms')
+def exit(soc,user_data):
+    pass
+def download(file,soc,user_data):
+    user_data['command'] = 'download'
+    user_data['Argument'] = file
+    pl.sendFile(user_data,soc)
+    file = pl.receiveFile(soc)
+
+    strDB = json.dumps(file['data'])
+    fDB = open("dbFile.json", 'w')
+    fDB.write(strDB)
+    fDB.close()
 
 if __name__ == "__main__":
     sys.exit(main(sys.args))

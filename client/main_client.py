@@ -90,6 +90,12 @@ def main(*args):
             cl.goToDir(arg,soc,user_data)
         elif command == "makedir":
             cl.mkDir(arg,soc,user_data)
+        elif command == "upload":
+            cl.upload(soc,user_data)
+        elif command == "download":
+            cl.download(arg,soc,user_data)        
+        elif command == "exit":
+            cl.exit(soc,user_data)
         else:
             print 'Bad Argument.\n'
 

@@ -13,10 +13,9 @@ import sys
 
 def login(user, password):
     foundDB, db = DB()
-    if db != []:
+    status = -1
+    if foundDB:
         status = verify(db,user,password)
-    else:
-        status = -1
     if status == -1:
         print "Registering User. Login done!"
         saveDB({"User name": user, "Password": password})
@@ -26,17 +25,19 @@ def login(user, password):
 def verify(db,user,password):
     # Verify if user is in db
     status = -1
-    for i in xrange(len(db)):
-        if db[i]['User name'] == user and db[i]['Password'] == password:
-            print "Login successful."
+    print db
+    if db != []:
+        for i in xrange(len(db)):
+            if db[i]['User name'] == user and db[i]['Password'] == password:
+                print "Login successful."
+                status = 1
+            elif db[i]['User name'] == user and db[i]['Password'] != password:
+                print "Bad Argument. Wrong password."
+                status = 0
+        #if [pos for pos, char in enumerate(db['User name']) if char == user] == -1:
+        if status == -1:
+            saveDB({'User name': user, 'Password': password})
             status = 1
-        elif db[i]['User name'] == user and db[i]['Password'] != password:
-            print "Bad Argument. Wrong password."
-            status = 0
-    #if [pos for pos, char in enumerate(db['User name']) if char == user] == -1:
-    if status == -1:
-        saveDB({'User name': user, 'Password': password})
-        status = 1
     return status
 
 def DB():
@@ -51,11 +52,13 @@ def DB():
     return found,bd
 
 def createDB():
+    chdir('Home')
     obj = []
     strDB = json.dumps(obj)
     fDB = open("dbFile.json", 'w')
     fDB.write(strDB)
     fDB.close()
+    return obj
 
 def saveDB(profile):
     db = []
@@ -83,20 +86,29 @@ def loadDB():
 
 def checkServer():
     # Check if is the first time that server is initialize and create first Dirs.
-    if listdir('.') == []:
+    dir = listdir('.')
+    found = 0
+    for i in xrange(len(dir)):
+        if dir[i] == 'Home':
+            found = 1
+
+    if not found:
         mkDir('Home')
         goToDir('Home')
         mkDir('SharedFolder') #Creates Shared folder inside Home
         print 'Server created'
+    else:
+        goToDir('Home')
     #print listdir('.')
 #### File Manipulation
 def checkDir(file,soc):
     dir = listdir('.')
+    for i in dir:
+        print i
     file['data'] = dir
-    pl.sendFile(notify,soc)
+    pl.sendFile(file,soc)
 
 def removeFile(file,soc):
-    #if path.isfile(file):
     deleted = 0
     root, dirs, files = walk('.').next()
     for i in files:
@@ -114,19 +126,19 @@ def moveFile(user_data,soc):
     dest = args[1]
     shutil.move(file,dest)
 
-def goToDir(arg,soc):
-    dir_path = ""
-    if arg == '..':
-        dirpath = getcwd()
-        print dirpath
+def goToDir(arg):
+    #dir_path = ""
+    #if arg == '..':
+    #    dirpath = getcwd()
+    #    print dirpath
     chdir(arg) #path
-
+    #return arg
 def mkDir(directory):
     try:
         makedirs(directory)
     except OSError as e:
         if e.errno == errno.EEXIST: # and path.isdir(path)
-            print "Directory already exist!\n"
+            print "User already registered!\n"
         else:
             print "Invalid Argument.\n"
 
