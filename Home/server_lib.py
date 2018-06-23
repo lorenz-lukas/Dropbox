@@ -1,36 +1,43 @@
-import numpy as np
+# coding=utf-8
 import pLukas as pl
-import sys
 from os import walk
 from os import listdir
+from os import path
+from os import remove
+from os import makedirs
 from os import chdir
+from os import getcwd
 import json
+import errno
+import sys
 
-def login(name, password):
+def login(user, password):
     foundDB, db = DB()
     status = verify(db,user,password)
     if status != 1:
-        print "Registering User. Login done! Trying connection..."
+        print "Registering User. Login done!"
         saveDB({"User name": user, "Password": password})
         status = 1
     return status
 
 def verify(db,user,password):
+    # Verify if user is in db
     status = -1
     for i in xrange(len(db)):
         if db[i]['User name'] == user and db[i]['Password'] == password:
-            print "Login successfull. Trying conection..."
+            print "Login successful."
             status = 1
-        elif db[i]['User name'] == user and db[i]['Password'] != password:
-            print "Bad Argument."
-            status = -1
-    if [pos for pos, char in enumerate(db['User name']) if char == user] == -1:
+        elif db[i]['User name'] == user and db[i]['Password'] != password and status == -1:
+            print "Bad Argument. Wrong password."
+            status = 0
+    #if [pos for pos, char in enumerate(db['User name']) if char == user] == -1:
+    if status == -1:
         saveDB({'User name': user, 'Password': password})
         status = 1
     return status
 
 def DB():
-    tree = listdir('Home')
+    tree = listdir('.')
     found  = 0
     for i in xrange(len(tree)):
         if(tree[i] == "dbFile.json"):
@@ -60,17 +67,25 @@ def loadDB():
         data = json.loads(infile.read())
     return data
 
-def tree():
-    tree = listdir('Home')
-    found  = 0
-    for i in xrange(len(tree)):
-        if(tree[i] == "treeFile.json"):
-            found = 1
-            bd = loadTreeFile()
-    if(not found):
-        bd = createDB()
-    return found,bd
+#def tree():
+#    tree = listdir('Home')
+#    found  = 0
+#    for i in xrange(len(tree)):
+#        if(tree[i] == "treeFile.json"):
+#            found = 1
+#            bd = loadTreeFile()
+#    if(not found):
+#        bd = createDB()
+#    return found,bd
 
+def checkServer():
+    # Check if is the first time that server is initialize and create first Dirs.
+    if listdir('.') == []:
+        mkDir('Home')
+        goToDir('Home')
+        mkDir('SharedFolder') #Creates Shared folder inside Home
+        print 'Server created'
+    #print listdir('.')
 #### File Manipulation
 def checkDir():
     dir = listdir('.')
@@ -98,11 +113,11 @@ def moveFile(args):
 
 def goToDir(arg):
     dir_path = ""
-    if arg[0] == '..':
+    if arg == '..':
         dirpath = getcwd()
         print dirpath
-    print arg[0]
-    chdir(arg[0]) #path
+    print arg
+    chdir(arg) #path
 
 
 def printDir():
@@ -119,9 +134,9 @@ def printDir():
 
 def mkDir(directory):
     try:
-        makedirs(directory[0])
+        makedirs(directory)
     except OSError as e:
-        if e.errno != errno.EEXIST:
+        if e.errno == errno.EEXIST: # and path.isdir(path)
             print "Directory already exist!\n"
         else:
             print "Invalid Argument.\n"

@@ -1,7 +1,7 @@
+# coding=utf-8
 import socket
 from os import walk
 from os import listdir
-import server_lib as ser
 import json
 import sys
 #from threading import Thread #https://www.tutorialspoint.com/python/python_multithreading.htm
@@ -29,20 +29,36 @@ def message(arg):
 
 def service(refSocket,clientData,server_soc):
     server_ip = '0.0.0.0'
+    sr.checkServer()
     print "Server initialized. Connected to: ",clientData,"\n\n\n"
     ip,port = clientData #127.0.0.1 , port_interface
     file = receiveFile(refSocket)
-    print '1'
-    status = sr.login(file['name'],file['password'])
-    print '2'
-    file = message([None,None,None,ip,port,None,status,None])
+    status = sr.login(file['user'],file['password'])
+    file = message([file['user'],file['password'],None,None,ip,port,status,None])
     sendFile(file,refSocket)
-    print "3"
+    sr.mkDir(file['user'])
+    sr.goToDir(file['user'])
     if status:
         while file['command']!='exit':
             file = receiveFile(refSocket)
-            print 'oi123'
-
+            if file['command'] == 'help':
+                listCommand()
+            elif file['command'] == 'checkdir':
+                cl.checkDir()
+            elif file['command'] == 'rm':
+                cl.removeFile(arg)
+            elif file['command'] == 'mv':
+                cl.moveFile(arg)
+            elif file['command'] == 'cd':
+                cl.goToDir(arg)
+            elif file['command'] == "makedir":
+                cl.mkDir(arg)
+            elif file['command'] == "upload":
+                pass
+            elif file['command'] == "download":
+                pass
+            else:
+                print 'Bad Argument.\n'
 
 def connectionServer():
     global server_soc
@@ -77,15 +93,14 @@ def connectionClient():
 def receiveFile(soc):
     len = soc.recv(1024)
     file = soc.recv(int(len))
-    file = json.loads(file.decode('utf-8'))
-    print file
+    file = json.loads(file)#file.decode('ascii')
+    file = {'user': str(file['user']), 'password': str(file['password']),'command': str(file['command']),'Argument':str(file['Argument']), 'IP': str(file['IP']), 'Port': str(file['Port']),'data': str(file['data']), 'path': str(file['path'])}
     return file
 
 def sendFile(file,soc):
     ip = file['IP']
     port = file['Port']
-    string = json.dumps(file)
-    string.encode('ascii')
+    string = json.dumps(file)#string.encode('ascii')
     f = str(file)
     len_file = len(f.encode('utf-8'))#len(file)
     soc.send(str(len_file))

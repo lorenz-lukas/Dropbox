@@ -18,8 +18,7 @@ def checkUserName(user, password, IP, PORT):
     message = {'user': user, 'password': password, 'IP': '0.0.0.0', 'Port': PORT,'command': None,'Argument':None,'data': None, 'path': None}
     pl.sendFile(message,soc)
     file = pl.receiveFile(soc)
-    print 'ok'
-    return file['data']
+    return int(file['data'])
 
 def checkDir():
     dir = listdir('.')

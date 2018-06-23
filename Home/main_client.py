@@ -5,22 +5,26 @@ import client_lib as cl
 import os
 import sys
 
-def login(status,strikes,ip,port):
-    choise = str(raw_input("Press 'l' to Login or 's' to Sign in.\n"))
-    if choise == 'l' or choise == 'L':
-        user = str(raw_input("User name:" ))
-        password = str(raw_input("Password:"))
-        status = cl.checkUserName(user, password,ip,port)
-    elif choise == 's' or choise == 'S':
-        user = str(raw_input("Set users name:"))
-        password = str(raw_input("Set password:"))
-        status = cl.checkUserName(user,password,ip,port)
+def login(status,ip,port,arg):
+    if len(arg)>1:
+            IP = arg[1]
+            PORT = arg[2]
+            user = arg[3]
+            password = arg[4]
+            status = cl.checkUserName(user, password,ip,port)
     else:
-        if strikes < 2:
-            print("Invalid input. Please enter valid ones..\n")
-        status = -1
-        strikes+=1
-    return status,strikes
+        choise = str(raw_input("Press 'l' to Login or 's' to Sign in.\n"))
+        if choise == 'l' or choise == 'L':
+            user = str(raw_input("User name:" ))
+            password = str(raw_input("Password:"))
+            status = cl.checkUserName(user, password,ip,port)
+        elif choise == 's' or choise == 'S':
+            user = str(raw_input("Set users name:"))
+            password = str(raw_input("Set password:"))
+            status = cl.checkUserName(user,password,ip,port)
+        else:
+            print 'Wrong input.'
+    return status
 
 def listCommand():
     print "\n\nCommand List:\n\n"
@@ -59,15 +63,13 @@ def main(*args):
     print "\n\n"
     IP = "127.0.0.1"
     PORT = "1234"
+    status = -1
     if len(sys.argv) > 1:
-        IP = sys.argv[1]
-        PORT = sys.argv[2]
-        user = sys.argv[3]
-        password = sys.argv[4]
+        status = login(status,IP,PORT,sys.argv)
+
     else:
-        status = -1
-        strikes = 0
-        status,strikes = login(status,strikes,IP,PORT) ###
+        status = login(status,IP,PORT,sys.argv) ###
+        print status
         if(status != 1):
             print "Wrong input."
             exit()
