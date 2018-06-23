@@ -25,7 +25,7 @@ def error():
     pass
 
 def message(arg):
-    return {'user': arg[0], 'password': arg[1],'command': arg[2],'Argument':arg[3], 'IP': arg[4], 'Port': arg[5],'data': arg[6], 'path': arg[7]}
+    return {'user': arg[0], 'password': arg[1],'IP': arg[2], 'Port': arg[3],'command': arg[4],'Argument':arg[5],'data': arg[6], 'path': arg[7]}
 
 def service(refSocket,clientData,server_soc):
     server_ip = '0.0.0.0'
@@ -34,25 +34,26 @@ def service(refSocket,clientData,server_soc):
     ip,port = clientData #127.0.0.1 , port_interface
     file = receiveFile(refSocket)
     status = sr.login(file['user'],file['password'])
-    file = message([file['user'],file['password'],None,None,ip,port,status,None])
+    file = message([file['user'],file['password'],ip,port,None,None,status,None])
     sendFile(file,refSocket)
     sr.mkDir(file['user'])
-    sr.goToDir(file['user'])
+    sr.goToDir(file['user'],refSocket)
     if status:
         while file['command']!='exit':
+            sleep(0.1) #sync
             file = receiveFile(refSocket)
             if file['command'] == 'help':
-                listCommand()
+                listCommand(file,refSocket)
             elif file['command'] == 'checkdir':
-                cl.checkDir()
+                sr.checkDir(file,refSocket)
             elif file['command'] == 'rm':
-                cl.removeFile(arg)
+                sr.removeFile(file,refSocket)
             elif file['command'] == 'mv':
-                cl.moveFile(arg)
+                sr.moveFile(file,refSocket)
             elif file['command'] == 'cd':
-                cl.goToDir(arg)
+                sr.goToDir(file,refSocket)
             elif file['command'] == "makedir":
-                cl.mkDir(arg)
+                sr.mkDir(file,refSocket)
             elif file['command'] == "upload":
                 pass
             elif file['command'] == "download":
@@ -67,20 +68,12 @@ def connectionServer():
     server_soc.listen(1)
     print "Waiting connection...\n\n"
     while True:
-        #ref_socket, client = soc.accept() # Refsocket, ClientIP/PORT
-        #client_handler = Thread(targetservice,args=(ref_socket, client,))
-        #client_handler.start()
         ref_soc, client = server_soc.accept()
         thread.start_new_thread(service, tuple([ref_soc, client,server_soc]))
 
     server_soc.close()
-    #except KeyboardInterrupt as e:
-    #    ref_socket.close()
-    #    client_handler.exit()
     print "Exiting..."
     sys.exit()
-    #finally:
-    #    print "Error: Unable to connect to server."
 
 def connectionClient():
     client_soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -92,9 +85,10 @@ def connectionClient():
 
 def receiveFile(soc):
     len = soc.recv(1024)
+    soc.send('ok')
     file = soc.recv(int(len))
     file = json.loads(file)#file.decode('ascii')
-    file = {'user': str(file['user']), 'password': str(file['password']),'command': str(file['command']),'Argument':str(file['Argument']), 'IP': str(file['IP']), 'Port': str(file['Port']),'data': str(file['data']), 'path': str(file['path'])}
+    file = {'user': str(file['user']), 'password': str(file['password']),'IP': str(file['IP']), 'Port': str(file['Port']),'command': str(file['command']),'Argument':str(file['Argument']),'data': str(file['data']), 'path': str(file['path'])}
     return file
 
 def sendFile(file,soc):
@@ -104,9 +98,11 @@ def sendFile(file,soc):
     f = str(file)
     len_file = len(f.encode('utf-8'))#len(file)
     soc.send(str(len_file))
-    sleep(0.1)
+    s = 'wait'
+    while s != 'ok': #sync
+        s = soc.recv(1024)
+        sleep(0.01)
     soc.send(string)
-
 ### IP Loop-back: 127.0.0.1
 if __name__ == "__main__":
     sys.exit(main(sys.args))

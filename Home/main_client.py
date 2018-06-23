@@ -11,20 +11,21 @@ def login(status,ip,port,arg):
             PORT = arg[2]
             user = arg[3]
             password = arg[4]
-            status = cl.checkUserName(user, password,ip,port)
+            status,soc,user = cl.checkUserName(user, password,ip,port)
     else:
         choise = str(raw_input("Press 'l' to Login or 's' to Sign in.\n"))
         if choise == 'l' or choise == 'L':
             user = str(raw_input("User name:" ))
             password = str(raw_input("Password:"))
-            status = cl.checkUserName(user, password,ip,port)
+            status,soc,user = cl.checkUserName(user, password,ip,port)
         elif choise == 's' or choise == 'S':
             user = str(raw_input("Set users name:"))
             password = str(raw_input("Set password:"))
-            status = cl.checkUserName(user,password,ip,port)
+            status,soc,user = cl.checkUserName(user,password,ip,port)
         else:
             print 'Wrong input.'
-    return status
+            exit()
+    return status,soc,user
 
 def listCommand():
     print "\n\nCommand List:\n\n"
@@ -65,10 +66,9 @@ def main(*args):
     PORT = "1234"
     status = -1
     if len(sys.argv) > 1:
-        status = login(status,IP,PORT,sys.argv)
-
+        status,soc,user_data = login(status,IP,PORT,sys.argv)
     else:
-        status = login(status,IP,PORT,sys.argv) ###
+        status,soc,user_data = login(status,IP,PORT,sys.argv) ###
         print status
         if(status != 1):
             print "Wrong input."
@@ -79,17 +79,17 @@ def main(*args):
         command = raw_input(cl.printDir())
         command, arg = exception(command)
         if command == 'help':
-            listCommand()
+            listCommand(soc,user_data)
         elif command == 'checkdir':
-            cl.checkDir()
+            cl.checkDir(soc,user_data)
         elif command == 'rm':
-            cl.removeFile(arg)
+            cl.removeFile(arg,soc,user_data)
         elif command == 'mv':
-            cl.moveFile(arg)
+            cl.moveFile(arg,soc,user_data)
         elif command == 'cd':
-            cl.goToDir(arg)
+            cl.goToDir(arg,soc,user_data)
         elif command == "makedir":
-            cl.mkDir(arg)
+            cl.mkDir(arg,soc,user_data)
         else:
             print 'Bad Argument.\n'
 

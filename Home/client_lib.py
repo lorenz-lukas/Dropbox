@@ -18,35 +18,36 @@ def checkUserName(user, password, IP, PORT):
     message = {'user': user, 'password': password, 'IP': '0.0.0.0', 'Port': PORT,'command': None,'Argument':None,'data': None, 'path': None}
     pl.sendFile(message,soc)
     file = pl.receiveFile(soc)
-    return int(file['data'])
+    print 'ok'
+    return int(file['data']),soc,message
 
-def checkDir():
-    dir = listdir('.')
+def checkDir(soc,user_data):
+    user_data['command'] = 'checkdir'
+    pl.sendFile(user_data,soc)
+    user_data = pl.receiveFile(soc)
+    dir = user_data['data']
     for i in dir:
         print i
 
-def removeFile(file):
-    #if path.isfile(file):
-    deleted = 0
-    root, dirs, files = walk('.').next()
-    print files
-    for i in files:
-        if file == str(i):
-            remove(file)
-            deleted = 1
-    if not deleted:
+def removeFile(file_name,soc,user_data):
+    user_data['command'] = 'rm'
+    user_data['Argument'] = file_name
+    pl.sendFile(user_data,soc)
+    message = pl.receiveFile(soc)
+    if message['data'] == 0:
         print("Error: %s file not found" % file)
+    else:
+        print("File %s removed successful" %file)
 
-def moveFile(args):
-    file = args[0]
-    dest = args[1]
-    #source = listdir(orig)
-    #for files in source:
-    shutil.move(file,dest)
+def moveFile(file_name,soc,user_data):
+    user_data['command'] = 'mv'
+    user_data['Argument'] = args
+    pl.sendFile(user_data,soc)
 
 def goToDir(arg):
-    chdir(arg[0]) #path
-
+    user_data['command'] = 'mv'
+    user_data['Argument'] = args
+    pl.sendFile(user_data,soc)
 
 def printDir():
     dirpath = getcwd()

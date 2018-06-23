@@ -13,8 +13,11 @@ import sys
 
 def login(user, password):
     foundDB, db = DB()
-    status = verify(db,user,password)
-    if status != 1:
+    if db != []:
+        status = verify(db,user,password)
+    else:
+        status = -1
+    if status == -1:
         print "Registering User. Login done!"
         saveDB({"User name": user, "Password": password})
         status = 1
@@ -27,7 +30,7 @@ def verify(db,user,password):
         if db[i]['User name'] == user and db[i]['Password'] == password:
             print "Login successful."
             status = 1
-        elif db[i]['User name'] == user and db[i]['Password'] != password and status == -1:
+        elif db[i]['User name'] == user and db[i]['Password'] != password:
             print "Bad Argument. Wrong password."
             status = 0
     #if [pos for pos, char in enumerate(db['User name']) if char == user] == -1:
@@ -87,50 +90,36 @@ def checkServer():
         print 'Server created'
     #print listdir('.')
 #### File Manipulation
-def checkDir():
+def checkDir(file,soc):
     dir = listdir('.')
-    for i in dir:
-        print i
+    file['data'] = dir
+    pl.sendFile(notify,soc)
 
-def removeFile(file):
+def removeFile(file,soc):
     #if path.isfile(file):
     deleted = 0
     root, dirs, files = walk('.').next()
-    print files
     for i in files:
-        if file == str(i):
-            remove(file)
+        if file['Argument'] == str(i):
+            remove(file['Argument'])
             deleted = 1
     if not deleted:
-        print("Error: %s file not found" % file)
+        print("Error: %s file not found" % file['Argument'])
+    notify = pl.message(None,None,None,None,None,None,deleted,None)
+    pl.sendFile(notify,soc)
 
-def moveFile(args):
+def moveFile(user_data,soc):
+    args = user_data['Argument']
     file = args[0]
     dest = args[1]
-    #source = listdir(orig)
-    #for files in source:
     shutil.move(file,dest)
 
-def goToDir(arg):
+def goToDir(arg,soc):
     dir_path = ""
     if arg == '..':
         dirpath = getcwd()
         print dirpath
-    print arg
     chdir(arg) #path
-
-
-def printDir():
-    dirpath = getcwd()
-    string = dirpath.split('/')
-    #print string
-    pth = '~'
-    for i in xrange(len(string)):
-        if string[i] == 'Home':
-            rel_path = string[i:len(string)]
-            for i in rel_path:
-                pth +=('/'+i)
-    return (pth + '$' + ' Set command: ')
 
 def mkDir(directory):
     try:
