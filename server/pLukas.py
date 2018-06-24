@@ -116,20 +116,36 @@ def receiveFile(soc):
             'IP': str(file['IP']), 'Port': str(file['Port']),
             'command': str(file['command']), 'Argument': str(file['Argument']),
             'data': str(file['data']), 'path': str(file['path'])}
-    #file['data'] = ast.literal_eval(file['data'])
-    #user_data = json.dumps(file)
-    #user_data = ast.literal_eval(file)
-    #Manipulating data to get the correct format
     arg = file['Argument']
-    j = 0
-    d = ''
-    len = 0
-    for i in arg:
-        len+=1
-    if arg[1] == 'u':
-        d = arg[3:len-2]
-    if d != '':
-        file['Argument'] = str(d)
+
+    if arg.find(',') != -1:
+        arg1,arg2 = arg.split(',')
+        j = 0
+        d = ''
+        len = 0
+        for i in arg1:
+            len+=1
+        if arg1[1] == 'u':
+            d = arg1[3:len-1]
+        j = 0
+        d2 = ''
+        len = 0
+        for i in arg2:
+            len+=1
+        if arg2[1] == 'u':
+            d2 = arg2[3:len-2]
+        if d != '' and d2 != '':
+            file['Argument'] = [str(d),str(d2)]
+    else:
+        j = 0
+        d = ''
+        len = 0
+        for i in arg:
+            len+=1
+        if arg[1] == 'u':
+            d = arg[3:len-2]
+        if d != '':
+            file['Argument'] = str(d)
     return file
 
 def sendFile(file,soc):

@@ -47,7 +47,7 @@ def removeFile(file_name,soc,user_data):
     else:
         print("File %s removed successful" %file_name)
 
-def moveFile(file_name,soc,user_data):
+def moveFile(args,soc,user_data):
     user_data['command'] = 'mv'
     user_data['Argument'] = args
     pl.sendFile(user_data,soc)
@@ -58,6 +58,7 @@ def goToDir(args,soc,user_data):
     pl.sendFile(user_data,soc)
     user_data = pl.receiveFile(soc)
     return user_data
+
 def printDir(file):
     pth = '~'
     pth +=('/'+file['path'])

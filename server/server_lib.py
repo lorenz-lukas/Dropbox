@@ -123,8 +123,12 @@ def removeFile(file,soc):
     deleted = 0
     root, dirs, files = walk('.').next()
     for i in files:
-        if dir == str(i):
-            remove(dir)
+        if i == file['Argument']:
+            remove(file['Argument'])
+            deleted = 1
+    for i in dirs:
+        if i == file['Argument']:
+            shutil.rmtree(file['Argument'], ignore_errors=True)
             deleted = 1
     if not deleted:
         print("Error: %s file not found" % file['Argument'])
@@ -133,6 +137,7 @@ def removeFile(file,soc):
 
 def moveFile(user_data,soc):
     args = user_data['Argument']
+    #print args
     file = args[0]
     dest = args[1]
     shutil.move(file,dest)
@@ -197,7 +202,7 @@ def download(file,soc):
 
 def path(file,current_directory):
     if file['command'] == 'mv':
-        file['path'] = current_directory + file['Argument']
+        file['path'] = current_directory
     else:
         file['path'] = current_directory
     #print file
