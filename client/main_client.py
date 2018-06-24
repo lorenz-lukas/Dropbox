@@ -91,7 +91,7 @@ def main(*args):
         elif command == "makedir":
             cl.mkDir(arg,soc,user_data)
         elif command == "upload":
-            cl.upload(soc,user_data)
+            cl.upload(arg,soc,user_data)
         elif command == "download":
             cl.download(arg,soc,user_data)
         elif command == "exit":

@@ -1,5 +1,4 @@
 # coding=utf-8
-import numpy as np
 import pLukas as pl
 import sys
 from os import walk
@@ -79,26 +78,63 @@ def exit(soc,user_data):
         sys.exit()
 
 def upload(file,soc,user_data):
-    shutil.make_archive(file,
-                    'zip',
-                    '.',
-                    'file')
-    with open(file,'r') as infile:
-        data = json.loads(infile.read())
-    user_data['data'] = data
-    user_data['command'] = 'upload'
-    user_data['Argument'] = file
-    pl.sendFile(user_data,soc)
+    root, dirs, files = walk('.').next()
+    print 'Files in current client directory:'
+    print files
+    print 'Folders in current client directory:'
+    print dirs
+    found = 0
+    for i in files:
+        found = 1
+        makedirs('temp')
+        shutil.move(file[0],'temp')
+        file[0] = 'temp'
+    for i in dirs:
+        if i == file[0]:
+            found = 1
+    if found:
+        dirpath = getcwd()
+        user_data['command'] = 'upload'
+        user_data['Argument'] = file[0]
+        pl.sendFile(user_data,soc)
+        shutil.make_archive(dirpath + '/' + file[0], 'zip', file[0])
+        size = path.getsize(file[0]+'.zip')
+        soc.send(str(size))
+        Handshake = soc.recv(2)
+        if Handshake == 'ok': # if authorized to send then send
+            print "Uploading", file[0]," ..."
+            with open(file[0] + '.zip','rb') as f:
+                data = f.read(1024)
+                while data:
+                    soc.send(data)
+                    data = f.read(1024)
+            remove('temp.zip')
+            shutil.rmtree('temp', ignore_errors=True)
+        else:
+            print "Error to send file",file[0]," to Server."
+    else:
+        print("Error: %s file not found" % file)
 
 def download(file,soc,user_data):
     user_data['command'] = 'download'
     user_data['Argument'] = file
     pl.sendFile(user_data,soc)
-    file = pl.receiveFile(soc)
-    strDB = json.dumps(file['data'])
-    fDB = open(user_data['Argument'], 'w')
-    fDB.write(strDB)
-    fDB.close()
+    print 'User: ',user_data['user']
+    print 'Downloading file: ', user_data['Argument']
+    with open(file[0]+'.zip', 'wb') as f:
+        file_size = soc.recv(1024)
+        file_size = int(file_size)
+        rsize = 0
+        soc.send("ok") # Handshake
+        while True:
+            print 'Downloading...'
+            data = soc.recv(1024)
+            rsize += len(data)
+            f.write(data)
+            if  rsize >= file_size:
+                break
+    # Unzip file
+    #remove(file['Argument'] + '.zip')
 
 if __name__ == "__main__":
     sys.exit(main(sys.args))

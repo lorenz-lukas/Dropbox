@@ -189,18 +189,58 @@ def exit(file,soc):
     return online
 
 def upload(file,soc):
-    strDB = json.dumps(file['data'])
-    fDB = open(file['Argument'], 'w')
-    fDB.write(strDB)
-    fDB.close()
+    print 'User: ',file['user']
+    print 'Uploading file: ', file['Argument']
+    with open(file['Argument']+'.zip', 'wb') as f:
+        file_size = soc.recv(1024)
+        file_size = int(file_size)
+        rsize = 0
+        soc.send("ok") # Handshake
+        while True:
+            print 'Uploading to server...'
+            data = soc.recv(1024)
+            rsize += len(data)
+            f.write(data)
+            if  rsize >= file_size:
+                break
+    # Unzip file
+
+    #remove(file['Argument'] + '.zip')
 
 def download(file,soc):
-    with open(file['Argument'],'r') as infile:
-        data = json.loads(infile.read())
-    file['data'] = data
-    pl.sendFile(user_data,soc)
+    root, dirs, files = walk('.').next()
+    found = 0
+    for i in files:
+        if i == file['Argument']:
+            found = 1
+            makedirs('temp')
+            shutil.move(file['Argument'],'temp')
+            file['Argument'] = 'temp'
+    for i in dirs:
+        if i == file['Argument']:
+            found = 1
+    if found:
+        dirpath = getcwd()
+        shutil.make_archive(dirpath + '/' + file['Argument'], 'zip', file['Argument'])
+        size = path.getsize('temp' + '.zip')
+        soc.send(str(size))
+        Handshake = soc.recv(2)
+        if Handshake == 'ok': # if authorized to send then send
+            with open(file['Argument'] + '.zip','rb') as f:
+                data = f.read(1024)
+                while data:
+                    soc.send(data)
+                    data = f.read(1024)
+            remove('temp.zip')        
+            shutil.rmtree('temp', ignore_errors=True)
+        else:
+            print "Error to send file",file['Argument']," to Server."
+    else:
+        print("Error: %s file not found" % file)
+        file['data'] = 'File not found'
+        pl.sendFile(file,soc)
 
-def path(file,current_directory):
+def getPath(file,current_directory):
     if file['command'] == 'mv':
         file['path'] = current_directory
     else:

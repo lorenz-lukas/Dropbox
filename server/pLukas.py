@@ -17,11 +17,13 @@ import server_lib as sr
 server_soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 ClientLog = []
 connected = 1
+ListThread = []
+
 def message(arg):
     return {'user': arg[0], 'password': arg[1],'IP': arg[2], 'Port': arg[3],'command': arg[4],'Argument':arg[5],'data': arg[6], 'path': arg[7]}
 
 def service(refSocket,clientData,server_soc,root):
-    global ClientLog,connected
+    global ClientLog, connected, ListThread
     server_ip = '0.0.0.0'
     num_thread = th.active_count()
     #print num_thread
@@ -61,7 +63,8 @@ def service(refSocket,clientData,server_soc,root):
         while online:
             sleep(0.1) #sync
             file = receiveFile(refSocket)
-            file = sr.path(file,path)
+            file = sr.getPath(file,path)
+            note(file,refSocket)
             log_file.append((file['command'],file['Argument']))
             if file['command'] == 'help':
                 listCommand(file,refSocket)
@@ -74,17 +77,18 @@ def service(refSocket,clientData,server_soc,root):
             elif file['command'] == 'cd':
                 path = sr.goToDir(file,refSocket)
                 #chdir(file['Argument'])
-            elif file['command'] == "makedir":
+            elif file['command'] == 'makedir':
                 sr.mkDir(file['Argument'])
-            elif file['command'] == "upload":
+            elif file['command'] == 'upload':
                 sr.upload(file,refSocket)
-            elif file['command'] == "download":
+            elif file['command'] == 'download':
                 sr.download(file,refSocket)
-            elif file['command'] == "exit":
+            elif file['command'] == 'exit':
                 online = sr.exit(file,refSocket)
             else:
                 print 'Bad Argument.\n'
 
+            del ListThread[0]
     #with open('LogFile.json','w') as outfile:
     #    outfile.write(json.dumps(log_file,indent = True))
 
@@ -93,7 +97,12 @@ def service(refSocket,clientData,server_soc,root):
         server_soc.close()
         print "Exiting..."
         connected = 0
-    print 'oi'
+
+def note(file,soc):
+    global ListThread
+    ListThread.append(soc)
+    while ListThread[0] != soc:
+        sleep(0.01)
 
 def connectionServer():
     global server_soc,ClientLog,connected
