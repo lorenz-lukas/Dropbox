@@ -47,7 +47,7 @@ def exception(c):
                 c = array[0]
                 arg = array[1:len(array)]
         else:
-            print 'Bad argument.\n'
+            #print 'Bad argument.\n'
             c = None
             arg = None
     else:
@@ -79,7 +79,7 @@ def main(*args):
         command = raw_input(cl.printDir(user_data))
         command, arg = exception(command)
         if command == 'help':
-            listCommand(soc,user_data)
+            listCommand()
         elif command == 'checkdir':
             cl.checkDir(soc,user_data)
         elif command == 'rm':
@@ -87,7 +87,7 @@ def main(*args):
         elif command == 'mv':
             cl.moveFile(arg,soc,user_data)
         elif command == 'cd':
-            cl.goToDir(arg,soc,user_data)
+            user_data = cl.goToDir(arg,soc,user_data)
         elif command == "makedir":
             cl.mkDir(arg,soc,user_data)
         elif command == "upload":

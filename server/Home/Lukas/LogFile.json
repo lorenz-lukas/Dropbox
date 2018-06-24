@@ -1,10 +1,10 @@
 [
  [
-  "checkdir", 
-  "None"
+  "mkdir", 
+  "'s'"
  ], 
  [
   "exit", 
-  "None"
+  "'s'"
  ]
 ]

@@ -28,7 +28,10 @@ def receiveFile(soc):
     soc.send('ok')
     file = soc.recv(int(len))
     file = json.loads(file)#file.decode('ascii')
-    file = {'user': str(file['user']), 'password': str(file['password']),'IP': str(file['IP']), 'Port': str(file['Port']),'command': str(file['command']),'Argument':str(file['Argument']),'data': str(file['data']), 'path': str(file['path'])}
+    file = {'user': str(file['user']), 'password': str(file['password']),
+            'IP': str(file['IP']), 'Port': str(file['Port']),
+            'command': str(file['command']),'Argument':str(file['Argument']),
+            'data': str(file['data']), 'path': str(file['path'])}
     return file
 
 def sendFile(file,soc):

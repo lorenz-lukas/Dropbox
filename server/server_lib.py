@@ -7,6 +7,8 @@ from os import remove
 from os import makedirs
 from os import chdir
 from os import getcwd
+import shutil
+import ast
 import json
 import errno
 import sys
@@ -22,7 +24,7 @@ def checkServer():
     for i in current_dir: # Check if server is initialized
         if i == 'Home':
             found = 1
-    for i in xrange(len(dir)): # Check if server is initialized before  
+    for i in xrange(len(dir)): # Check if server is initialized before
         if dir[i] == 'Home':
             path = dir[0:i]
             found = 1
@@ -30,9 +32,9 @@ def checkServer():
         root_path = ""
         for i in dir:
             root_path = root_path + i + '/'
-        goToDir(root_path)
+        chdir(root_path)
         mkDir('Home')
-        goToDir(root_path+'Home')
+        chdir(root_path+'Home')
         mkDir('SharedFolder') #Creates Shared folder inside Home
         print 'Server created'
     else:
@@ -41,7 +43,7 @@ def checkServer():
         for i in path:
             root_path = root_path + i + '/'
         root_path = root_path + root
-        goToDir(root_path)
+        chdir(root_path)
 
 def login(user, password):
     try:
@@ -121,8 +123,8 @@ def removeFile(file,soc):
     deleted = 0
     root, dirs, files = walk('.').next()
     for i in files:
-        if file['Argument'] == str(i):
-            remove(file['Argument'])
+        if dir == str(i):
+            remove(dir)
             deleted = 1
     if not deleted:
         print("Error: %s file not found" % file['Argument'])
@@ -135,13 +137,32 @@ def moveFile(user_data,soc):
     dest = args[1]
     shutil.move(file,dest)
 
-def goToDir(arg):
-    #dir_path = ""
-    #if arg == '..':
-    #    dirpath = getcwd()
-    #    print dirpath
-    chdir(arg) #path
-    #return arg
+def goToDir(file,soc):
+    arg = file['Argument']
+    dirpath = getcwd()
+    dir = dirpath.split('/')
+    if arg == '..':
+        if dir[-2] == 'Home':
+            print 'Changing to SharedFolder'
+            chdir('..')
+            chdir('SharedFolder')
+            file['path'] = 'Home/SharedFolder'
+        else:
+            chdir(arg)
+            del dir[-1]
+            path = ''
+            for i in xrange(len(dir)):
+                if dir[i] == 'Home':
+                    p = dir[i:len(dir)]
+            for i in p:
+                path += i + '/'
+            file['path'] = path
+    else:
+        chdir(arg)
+        file['path'] = file['path'] + '/' + arg
+    pl.sendFile(file,soc)
+    return file
+
 def mkDir(directory):
     try:
         makedirs(directory)
@@ -179,7 +200,8 @@ def path(file,current_directory):
         file['path'] = current_directory + file['Argument']
     else:
         file['path'] = current_directory
-        return file
+    #print file
+    return file
 
 if __name__ == "__main__":
     sys.exit(main(sys.args))

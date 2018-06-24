@@ -9,6 +9,7 @@ from os import remove
 from os import makedirs
 from os import chdir
 from os import getcwd
+import ast
 import errno
 import json
 import shutil
@@ -25,10 +26,14 @@ def checkUserName(user, password, IP, PORT):
 def checkDir(soc,user_data):
     user_data['command'] = 'checkdir'
     pl.sendFile(user_data,soc)
-    user_data = pl.receiveFile(soc)
-    dir = user_data['data']
-    dir.decode('ascii')
-    print str(dir)
+    file = pl.receiveFile(soc)
+    #user_data = {'user': str(file['user']), 'password': str(file['password']),
+    #            'IP': str(file['IP']), 'Port': str(file['Port']),
+    #            'command': str(file['command']),'Argument':str(file['Argument']),
+    #            'data': str(file['data']), 'path': str(file['path'])}
+    user_data = json.dumps(file)
+    user_data = ast.literal_eval(user_data)
+    dir = ast.literal_eval(user_data['data'])
     for i in dir:
         print i
 
@@ -38,35 +43,31 @@ def removeFile(file_name,soc,user_data):
     pl.sendFile(user_data,soc)
     message = pl.receiveFile(soc)
     if message['data'] == 0:
-        print("Error: %s file not found" % file)
+        print("Error: %s file not found" % file_name)
     else:
-        print("File %s removed successful" %file)
+        print("File %s removed successful" %file_name)
 
 def moveFile(file_name,soc,user_data):
     user_data['command'] = 'mv'
     user_data['Argument'] = args
     pl.sendFile(user_data,soc)
 
-def goToDir(arg):
-    user_data['command'] = 'mv'
+def goToDir(args,soc,user_data):
+    user_data['command'] = 'cd'
     user_data['Argument'] = args
     pl.sendFile(user_data,soc)
-
+    user_data = pl.receiveFile(soc)
+    return user_data
 def printDir(file):
     pth = '~'
     pth +=('/'+file['path'])
     return (pth + '$' + ' Set command: ')
 
 def mkDir(args,soc,user_data):
-    user_data['command'] = 'mkdir'
+    user_data['command'] = 'makedir'
     user_data['Argument'] = args
     pl.sendFile(user_data,soc)
 
-def upload(file_name,soc,user_data):
-    shutil.make_archive(file_name,
-                    'zip',
-                    '/home/code/',
-                    'test_dicoms')
 def exit(soc,user_data):
     user_data['command'] = 'exit'
     pl.sendFile(user_data,soc)
@@ -77,6 +78,10 @@ def exit(soc,user_data):
         sys.exit()
 
 def upload(file,soc,user_data):
+    shutil.make_archive(file,
+                    'zip',
+                    '.',
+                    'file')
     with open(file,'r') as infile:
         data = json.loads(infile.read())
     user_data['data'] = data

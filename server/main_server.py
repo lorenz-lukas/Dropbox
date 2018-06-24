@@ -3,6 +3,7 @@
 import server_lib as sr
 import pLukas as pl
 import os
+import sys
 
 def main():
     os.system('cls' if os.name == 'nt' else 'clear')
@@ -13,5 +14,5 @@ def main():
     print "################################################################"
     print "\n\n"
     pl.connectionServer()
-
+    sys.exit()
 main()

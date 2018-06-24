@@ -1,4 +1,4 @@
-# coding=utf-8
+# -*- coding: utf-8 -*-
 import socket
 from os import walk
 from os import listdir
@@ -6,6 +6,7 @@ from os import chdir
 from os import makedirs
 from os import getcwd
 from time import sleep
+import ast
 import errno
 import json
 import sys
@@ -14,10 +15,13 @@ import threading as th
 import server_lib as sr
 
 server_soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+ClientLog = []
+connected = 1
 def message(arg):
     return {'user': arg[0], 'password': arg[1],'IP': arg[2], 'Port': arg[3],'command': arg[4],'Argument':arg[5],'data': arg[6], 'path': arg[7]}
 
 def service(refSocket,clientData,server_soc,root):
+    global ClientLog,connected
     server_ip = '0.0.0.0'
     num_thread = th.active_count()
     #print num_thread
@@ -57,7 +61,7 @@ def service(refSocket,clientData,server_soc,root):
         while online:
             sleep(0.1) #sync
             file = receiveFile(refSocket)
-            file = sr.path(file,current_directory)
+            file = sr.path(file,path)
             log_file.append((file['command'],file['Argument']))
             if file['command'] == 'help':
                 listCommand(file,refSocket)
@@ -67,8 +71,9 @@ def service(refSocket,clientData,server_soc,root):
                 sr.removeFile(file,refSocket)
             elif file['command'] == 'mv':
                 sr.moveFile(file,refSocket)
-            elif file['command'] == 'cd': #current_directory = sr.goToDir(file)
-                chdir(file['Argument'])
+            elif file['command'] == 'cd':
+                path = sr.goToDir(file,refSocket)
+                #chdir(file['Argument'])
             elif file['command'] == "makedir":
                 sr.mkDir(file['Argument'])
             elif file['command'] == "upload":
@@ -80,31 +85,51 @@ def service(refSocket,clientData,server_soc,root):
             else:
                 print 'Bad Argument.\n'
 
-    with open('LogFile.json','w') as outfile:
-        outfile.write(json.dumps(log_file,indent = True))
+    #with open('LogFile.json','w') as outfile:
+    #    outfile.write(json.dumps(log_file,indent = True))
 
-    print th.active_count()
-    if th.active_count() == 0:
+    del ClientLog[-1]
+    if ClientLog == []:
         server_soc.close()
         print "Exiting..."
-        sys.exit()
+        connected = 0
+    print 'oi'
 
 def connectionServer():
-    global server_soc
+    global server_soc,ClientLog,connected
     PORT = 1234
     server_soc.bind(('0.0.0.0',int(PORT))) #Host and Port
     server_soc.listen(1)
     print "Waiting connection...\n\n"
-    while True:
+    while connected:
         ref_soc, client = server_soc.accept()
+        ClientLog.append(ref_soc)
         thread.start_new_thread(service, tuple([ref_soc, client,server_soc,'Home']))
+    print "tchau"
 
 def receiveFile(soc):
     len = soc.recv(1024)
     soc.send('ok')
     file = soc.recv(int(len))
     file = json.loads(file)#file.decode('ascii')
-    file = {'user': str(file['user']), 'password': str(file['password']),'IP': str(file['IP']), 'Port': str(file['Port']),'command': str(file['command']),'Argument':str(file['Argument']),'data': str(file['data']), 'path': str(file['path'])}
+    file = {'user': str(file['user']), 'password': str(file['password']),
+            'IP': str(file['IP']), 'Port': str(file['Port']),
+            'command': str(file['command']), 'Argument': str(file['Argument']),
+            'data': str(file['data']), 'path': str(file['path'])}
+    #file['data'] = ast.literal_eval(file['data'])
+    #user_data = json.dumps(file)
+    #user_data = ast.literal_eval(file)
+    #Manipulating data to get the correct format
+    arg = file['Argument']
+    j = 0
+    d = ''
+    len = 0
+    for i in arg:
+        len+=1
+    if arg[1] == 'u':
+        d = arg[3:len-2]
+    if d != '':
+        file['Argument'] = str(d)
     return file
 
 def sendFile(file,soc):
