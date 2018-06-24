@@ -1,3 +1,4 @@
+# coding=utf-8
 import numpy as np
 import pLukas as pl
 import sys
@@ -19,14 +20,15 @@ def checkUserName(user, password, IP, PORT):
     pl.sendFile(message,soc)
     file = pl.receiveFile(soc)
     print 'ok'
-    return int(file['data']),soc,message
+    return int(file['data']),soc,file
 
 def checkDir(soc,user_data):
     user_data['command'] = 'checkdir'
     pl.sendFile(user_data,soc)
     user_data = pl.receiveFile(soc)
     dir = user_data['data']
-    print dir
+    dir.decode('ascii')
+    print str(dir)
     for i in dir:
         print i
 
@@ -50,16 +52,9 @@ def goToDir(arg):
     user_data['Argument'] = args
     pl.sendFile(user_data,soc)
 
-def printDir():
-    dirpath = getcwd()
-    string = dirpath.split('/')
-    #print string
+def printDir(file):
     pth = '~'
-    for i in xrange(len(string)):
-        if string[i] == 'Home':
-            rel_path = string[i:len(string)]
-            for i in rel_path:
-                pth +=('/'+i)
+    pth +=('/'+file['path'])
     return (pth + '$' + ' Set command: ')
 
 def mkDir(args,soc,user_data):

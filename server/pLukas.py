@@ -20,13 +20,13 @@ def message(arg):
 def service(refSocket,clientData,server_soc,root):
     server_ip = '0.0.0.0'
     num_thread = th.active_count()
-    print num_thread
+    #print num_thread
     current_directory = 'Home'
     if num_thread == 1:
         sr.checkServer()
     else:
         dirpath = getcwd()
-        print dirpath
+        #print dirpath
         string = dirpath.split('/')
         for i in xrange(len(string)):
             if i == 'Home':
@@ -36,22 +36,20 @@ def service(refSocket,clientData,server_soc,root):
         for i in directory:
             current_directory = current_directory + i + '/'
     dirpath = getcwd()
-    print dirpath
+    #print dirpath
     string = dirpath.split('/')
     if string[-1] != 'Home':
         chdir(current_directory)
 
-    print "Server initialized. Connected to: ",clientData,"\n\n\n"
+    print "Server initialized. Connected to: ",clientData,"\n"
     ip,port = clientData  #127.0.0.1 , port_interface
+
     file = receiveFile(refSocket)
     status = sr.login(file['user'],file['password'])
-    file = message([file['user'],file['password'],ip,port,None,None,status,None])
+    path = 'Home'+'/'+file['user']
+    file = message([file['user'],file['password'],ip,port,None,None,status,path])
     sendFile(file,refSocket)
-    try:
-        makedirs(file['user'])
-    except OSError as e:
-        if e.errno == errno.EEXIST: # and path.isdir(path)
-            pass
+    sr.mkDir(file['user'])
     chdir(file['user'])
     log_file = []
     online = 1
@@ -85,6 +83,12 @@ def service(refSocket,clientData,server_soc,root):
     with open('LogFile.json','w') as outfile:
         outfile.write(json.dumps(log_file,indent = True))
 
+    print th.active_count()
+    if th.active_count() == 0:
+        server_soc.close()
+        print "Exiting..."
+        sys.exit()
+
 def connectionServer():
     global server_soc
     PORT = 1234
@@ -94,10 +98,6 @@ def connectionServer():
     while True:
         ref_soc, client = server_soc.accept()
         thread.start_new_thread(service, tuple([ref_soc, client,server_soc,'Home']))
-
-    server_soc.close()
-    print "Exiting..."
-    sys.exit()
 
 def receiveFile(soc):
     len = soc.recv(1024)

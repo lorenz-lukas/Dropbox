@@ -76,7 +76,7 @@ def main(*args):
     os.system('cls' if os.name == 'nt' else 'clear')
     print "Welcome!\nEnter 'help' to see all options."
     while(status):
-        command = raw_input(cl.printDir())
+        command = raw_input(cl.printDir(user_data))
         command, arg = exception(command)
         if command == 'help':
             listCommand(soc,user_data)
@@ -93,7 +93,7 @@ def main(*args):
         elif command == "upload":
             cl.upload(soc,user_data)
         elif command == "download":
-            cl.download(arg,soc,user_data)        
+            cl.download(arg,soc,user_data)
         elif command == "exit":
             cl.exit(soc,user_data)
         else:

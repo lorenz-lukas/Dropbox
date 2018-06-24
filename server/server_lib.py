@@ -13,28 +13,34 @@ import sys
 
 def checkServer():
     # Check if is the first time that server is initialize and create first Dirs.
-    dir = listdir('.')
-    print dir
+    current_dir = listdir('.')
+    dirpath = getcwd()
+    dir = dirpath.split('/')
     found = 0
     root_path = 'Home'
-    for i in dir:
+    path = ''
+    for i in current_dir: # Check if server is initialized
         if i == 'Home':
             found = 1
-
+    for i in xrange(len(dir)): # Check if server is initialized before  
+        if dir[i] == 'Home':
+            path = dir[0:i]
+            found = 1
     if not found:
-        mkDir('Home')
-        dirpath = getcwd()
-        s = dirpath.split('/')
-        for i in xrange(len(s)):
-            if s[i] == 'Home':
-                path = s[0:i]
         root_path = ""
-        for i in path:
+        for i in dir:
             root_path = root_path + i + '/'
         goToDir(root_path)
+        mkDir('Home')
+        goToDir(root_path+'Home')
         mkDir('SharedFolder') #Creates Shared folder inside Home
         print 'Server created'
     else:
+        root = root_path
+        root_path = ''
+        for i in path:
+            root_path = root_path + i + '/'
+        root_path = root_path + root
         goToDir(root_path)
 
 def login(user, password):
@@ -71,7 +77,7 @@ def verify(db,user,password):
 
 def DB():
     tree = listdir('.')
-    print tree
+    #print tree
     found  = 0
     for i in xrange(len(tree)):
         if(tree[i] == "dbFile.json"):
@@ -82,7 +88,7 @@ def DB():
     return found,bd
 
 def createDB():
-    chdir('Home')
+    #chdir('Home')
     obj = []
     strDB = json.dumps(obj)
     fDB = open("dbFile.json", 'w')
@@ -120,7 +126,7 @@ def removeFile(file,soc):
             deleted = 1
     if not deleted:
         print("Error: %s file not found" % file['Argument'])
-    notify = pl.message(None,None,None,None,None,None,deleted,None)
+    notify = pl.message([None,None,None,None,None,None,deleted,None])
     pl.sendFile(notify,soc)
 
 def moveFile(user_data,soc):
@@ -141,7 +147,10 @@ def mkDir(directory):
         makedirs(directory)
     except OSError as e:
         if e.errno == errno.EEXIST: # and path.isdir(path)
-            print "User already registered!\n"
+            if directory == 'Home' or directory == 'SharedFolder':
+                pass
+            else:
+                print "User already registered!\n"
         else:
             print "Invalid Argument.\n"
 
@@ -149,7 +158,7 @@ def exit(file,soc):
     online = 0
     notify = pl.message([None,None,None,None,None,None,'ok',None])
     pl.sendFile(notify,soc)
-    print "Exiting...", file['name'], "\n\n"
+    print file['user']," exiting...", "\n\n"
     soc.close()
     return online
 
