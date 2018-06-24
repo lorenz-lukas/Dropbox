@@ -11,7 +11,37 @@ import json
 import errno
 import sys
 
+def checkServer():
+    # Check if is the first time that server is initialize and create first Dirs.
+    dir = listdir('.')
+    print dir
+    found = 0
+    root_path = 'Home'
+    for i in dir:
+        if i == 'Home':
+            found = 1
+
+    if not found:
+        mkDir('Home')
+        dirpath = getcwd()
+        s = dirpath.split('/')
+        for i in xrange(len(s)):
+            if s[i] == 'Home':
+                path = s[0:i]
+        root_path = ""
+        for i in path:
+            root_path = root_path + i + '/'
+        goToDir(root_path)
+        mkDir('SharedFolder') #Creates Shared folder inside Home
+        print 'Server created'
+    else:
+        goToDir(root_path)
+
 def login(user, password):
+    try:
+        chdir('Home')
+    except OSError as e:
+        pass
     foundDB, db = DB()
     status = -1
     if foundDB:
@@ -25,7 +55,6 @@ def login(user, password):
 def verify(db,user,password):
     # Verify if user is in db
     status = -1
-    print db
     if db != []:
         for i in xrange(len(db)):
             if db[i]['User name'] == user and db[i]['Password'] == password:
@@ -42,6 +71,7 @@ def verify(db,user,password):
 
 def DB():
     tree = listdir('.')
+    print tree
     found  = 0
     for i in xrange(len(tree)):
         if(tree[i] == "dbFile.json"):
@@ -73,33 +103,6 @@ def loadDB():
         data = json.loads(infile.read())
     return data
 
-#def tree():
-#    tree = listdir('Home')
-#    found  = 0
-#    for i in xrange(len(tree)):
-#        if(tree[i] == "treeFile.json"):
-#            found = 1
-#            bd = loadTreeFile()
-#    if(not found):
-#        bd = createDB()
-#    return found,bd
-
-def checkServer():
-    # Check if is the first time that server is initialize and create first Dirs.
-    dir = listdir('.')
-    found = 0
-    for i in xrange(len(dir)):
-        if dir[i] == 'Home':
-            found = 1
-
-    if not found:
-        mkDir('Home')
-        goToDir('Home')
-        mkDir('SharedFolder') #Creates Shared folder inside Home
-        print 'Server created'
-    else:
-        goToDir('Home')
-    #print listdir('.')
 #### File Manipulation
 def checkDir(file,soc):
     dir = listdir('.')
@@ -141,6 +144,33 @@ def mkDir(directory):
             print "User already registered!\n"
         else:
             print "Invalid Argument.\n"
+
+def exit(file,soc):
+    online = 0
+    notify = pl.message([None,None,None,None,None,None,'ok',None])
+    pl.sendFile(notify,soc)
+    print "Exiting...", file['name'], "\n\n"
+    soc.close()
+    return online
+
+def upload(file,soc):
+    strDB = json.dumps(file['data'])
+    fDB = open(file['Argument'], 'w')
+    fDB.write(strDB)
+    fDB.close()
+
+def download(file,soc):
+    with open(file['Argument'],'r') as infile:
+        data = json.loads(infile.read())
+    file['data'] = data
+    pl.sendFile(user_data,soc)
+
+def path(file,current_directory):
+    if file['command'] == 'mv':
+        file['path'] = current_directory + file['Argument']
+    else:
+        file['path'] = current_directory
+        return file
 
 if __name__ == "__main__":
     sys.exit(main(sys.args))

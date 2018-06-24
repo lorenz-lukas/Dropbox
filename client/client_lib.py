@@ -26,8 +26,9 @@ def checkDir(soc,user_data):
     pl.sendFile(user_data,soc)
     user_data = pl.receiveFile(soc)
     dir = user_data['data']
-    #for i in dir:
-    #    print i
+    print dir
+    for i in dir:
+        print i
 
 def removeFile(file_name,soc,user_data):
     user_data['command'] = 'rm'
@@ -72,15 +73,29 @@ def upload(file_name,soc,user_data):
                     '/home/code/',
                     'test_dicoms')
 def exit(soc,user_data):
-    pass
+    user_data['command'] = 'exit'
+    pl.sendFile(user_data,soc)
+    string = pl.receiveFile(soc)
+    if string['data'] == 'ok':
+        soc.close()
+        print "Exiting..."
+        sys.exit()
+
+def upload(file,soc,user_data):
+    with open(file,'r') as infile:
+        data = json.loads(infile.read())
+    user_data['data'] = data
+    user_data['command'] = 'upload'
+    user_data['Argument'] = file
+    pl.sendFile(user_data,soc)
+
 def download(file,soc,user_data):
     user_data['command'] = 'download'
     user_data['Argument'] = file
     pl.sendFile(user_data,soc)
     file = pl.receiveFile(soc)
-
     strDB = json.dumps(file['data'])
-    fDB = open("dbFile.json", 'w')
+    fDB = open(user_data['Argument'], 'w')
     fDB.write(strDB)
     fDB.close()
 

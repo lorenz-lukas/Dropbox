@@ -3,31 +3,64 @@ import socket
 from os import walk
 from os import listdir
 from os import chdir
+from os import makedirs
+from os import getcwd
 from time import sleep
+import errno
 import json
 import sys
 import thread
+import threading as th
 import server_lib as sr
 
 server_soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 def message(arg):
     return {'user': arg[0], 'password': arg[1],'IP': arg[2], 'Port': arg[3],'command': arg[4],'Argument':arg[5],'data': arg[6], 'path': arg[7]}
 
-def service(refSocket,clientData,server_soc):
+def service(refSocket,clientData,server_soc,root):
     server_ip = '0.0.0.0'
-    sr.checkServer()
+    num_thread = th.active_count()
+    print num_thread
+    current_directory = 'Home'
+    if num_thread == 1:
+        sr.checkServer()
+    else:
+        dirpath = getcwd()
+        print dirpath
+        string = dirpath.split('/')
+        for i in xrange(len(string)):
+            if i == 'Home':
+                path = string[0:i]
+                directory = string[i:len(string)]
+        current_directory = []
+        for i in directory:
+            current_directory = current_directory + i + '/'
+    dirpath = getcwd()
+    print dirpath
+    string = dirpath.split('/')
+    if string[-1] != 'Home':
+        chdir(current_directory)
+
     print "Server initialized. Connected to: ",clientData,"\n\n\n"
-    ip,port = clientData #127.0.0.1 , port_interface
+    ip,port = clientData  #127.0.0.1 , port_interface
     file = receiveFile(refSocket)
     status = sr.login(file['user'],file['password'])
     file = message([file['user'],file['password'],ip,port,None,None,status,None])
     sendFile(file,refSocket)
-    sr.mkDir(file['user'])
+    try:
+        makedirs(file['user'])
+    except OSError as e:
+        if e.errno == errno.EEXIST: # and path.isdir(path)
+            pass
     chdir(file['user'])
+    log_file = []
+    online = 1
     if status:
-        while file['command']!='exit':
+        while online:
             sleep(0.1) #sync
             file = receiveFile(refSocket)
+            file = sr.path(file,current_directory)
+            log_file.append((file['command'],file['Argument']))
             if file['command'] == 'help':
                 listCommand(file,refSocket)
             elif file['command'] == 'checkdir':
@@ -36,17 +69,21 @@ def service(refSocket,clientData,server_soc):
                 sr.removeFile(file,refSocket)
             elif file['command'] == 'mv':
                 sr.moveFile(file,refSocket)
-            elif file['command'] == 'cd':
-                #current_directory = sr.goToDir(file)
+            elif file['command'] == 'cd': #current_directory = sr.goToDir(file)
                 chdir(file['Argument'])
             elif file['command'] == "makedir":
                 sr.mkDir(file['Argument'])
             elif file['command'] == "upload":
-                pass
+                sr.upload(file,refSocket)
             elif file['command'] == "download":
-                pass
+                sr.download(file,refSocket)
+            elif file['command'] == "exit":
+                online = sr.exit(file,refSocket)
             else:
                 print 'Bad Argument.\n'
+
+    with open('LogFile.json','w') as outfile:
+        outfile.write(json.dumps(log_file,indent = True))
 
 def connectionServer():
     global server_soc
@@ -56,7 +93,7 @@ def connectionServer():
     print "Waiting connection...\n\n"
     while True:
         ref_soc, client = server_soc.accept()
-        thread.start_new_thread(service, tuple([ref_soc, client,server_soc]))
+        thread.start_new_thread(service, tuple([ref_soc, client,server_soc,'Home']))
 
     server_soc.close()
     print "Exiting..."
