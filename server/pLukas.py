@@ -18,12 +18,12 @@ server_soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 ClientLog = []
 connected = 1
 ListThread = []
-
+num_th = 0
 def message(arg):
     return {'user': arg[0], 'password': arg[1],'IP': arg[2], 'Port': arg[3],'command': arg[4],'Argument':arg[5],'data': arg[6], 'path': arg[7]}
 
 def service(refSocket,clientData,server_soc,root):
-    global ClientLog, connected, ListThread
+    global ClientLog, connected, ListThread, num_th
     server_ip = '0.0.0.0'
     num_thread = th.active_count()
     #print num_thread
@@ -64,7 +64,7 @@ def service(refSocket,clientData,server_soc,root):
             sleep(0.1) #sync
             file = receiveFile(refSocket)
             file = sr.getPath(file,path)
-            note(file,refSocket)
+            #note(file,refSocket)
             log_file.append((file['command'],file['Argument']))
             if file['command'] == 'help':
                 listCommand(file,refSocket)
@@ -87,34 +87,44 @@ def service(refSocket,clientData,server_soc,root):
                 online = sr.exit(file,refSocket)
             else:
                 print 'Bad Argument.\n'
-
-            del ListThread[0]
-    #with open('LogFile.json','w') as outfile:
-    #    outfile.write(json.dumps(log_file,indent = True))
-
-    del ClientLog[-1]
-    if ClientLog == []:
-        server_soc.close()
-        print "Exiting..."
-        connected = 0
+        dirpath = getcwd()
+        dir = dirpath.split('/')
+        directory = ''
+        for i in xrange(len(dir)):
+            if dir[i] == 'Home':
+                directory = dir[0:i+1]
+        p = ''
+        for i in xrange(len(directory)):
+            p += directory[i] + '/'
+        chdir(p+file['user'])
+        with open('LogFile.json','w') as outfile:
+            outfile.write(json.dumps(log_file,indent = True))
+    num_th = num_th - 1
 
 def note(file,soc):
     global ListThread
     ListThread.append(soc)
     while ListThread[0] != soc:
-        sleep(0.01)
+        print ListThread[0]
+        sleep(0.1)
 
 def connectionServer():
-    global server_soc,ClientLog,connected
+    global server_soc,num_th,connected
     PORT = 1234
     server_soc.bind(('0.0.0.0',int(PORT))) #Host and Port
     server_soc.listen(1)
     print "Waiting connection...\n\n"
-    while connected:
+    while True:
+        num_th+=1
         ref_soc, client = server_soc.accept()
         ClientLog.append(ref_soc)
-        thread.start_new_thread(service, tuple([ref_soc, client,server_soc,'Home']))
-    print "tchau"
+        if num_th == 0:
+            break
+        t = thread.start_new_thread(service, tuple([ref_soc, client,server_soc,'Home']))
+        #t.join()
+    server_soc.close()
+    print "Exiting..."
+    sys.exit()
 
 def receiveFile(soc):
     len = soc.recv(1024)

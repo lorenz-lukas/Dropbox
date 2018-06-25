@@ -12,6 +12,7 @@ import ast
 import json
 import errno
 import sys
+import zipfile
 
 def checkServer():
     # Check if is the first time that server is initialize and create first Dirs.
@@ -204,8 +205,12 @@ def upload(file,soc):
             if  rsize >= file_size:
                 break
     # Unzip file
-
-    #remove(file['Argument'] + '.zip')
+    print 'Upload done!'
+    dirpath = getcwd()
+    zip_ref = zipfile.ZipFile(dirpath+'/'+ file['Argument']+'.zip', 'r')
+    zip_ref.extractall(dirpath)
+    zip_ref.close()
+    remove(file['Argument']+'.zip')
 
 def download(file,soc):
     root, dirs, files = walk('.').next()
@@ -213,16 +218,19 @@ def download(file,soc):
     for i in files:
         if i == file['Argument']:
             found = 1
-            makedirs('temp')
+            try:
+                makedirs('temp')
+            except OSError as e:
+                if e.errno == errno.EEXIST: # and path.isdir(path)
+                    pass
             shutil.move(file['Argument'],'temp')
-            file['Argument'] = 'temp'
     for i in dirs:
         if i == file['Argument']:
             found = 1
     if found:
         dirpath = getcwd()
-        shutil.make_archive(dirpath + '/' + file['Argument'], 'zip', file['Argument'])
-        size = path.getsize('temp' + '.zip')
+        shutil.make_archive(dirpath + '/' + file['Argument'], 'zip', 'temp')
+        size = path.getsize(file['Argument'] + '.zip')
         soc.send(str(size))
         Handshake = soc.recv(2)
         if Handshake == 'ok': # if authorized to send then send
@@ -231,7 +239,8 @@ def download(file,soc):
                 while data:
                     soc.send(data)
                     data = f.read(1024)
-            remove('temp.zip')        
+            print 'Download done!'
+            remove(file['Argument']+'.zip')
             shutil.rmtree('temp', ignore_errors=True)
         else:
             print "Error to send file",file['Argument']," to Server."

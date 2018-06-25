@@ -12,6 +12,7 @@ import ast
 import errno
 import json
 import shutil
+import zipfile
 
 def checkUserName(user, password, IP, PORT):
     soc = pl.connectionClient()
@@ -26,10 +27,6 @@ def checkDir(soc,user_data):
     user_data['command'] = 'checkdir'
     pl.sendFile(user_data,soc)
     file = pl.receiveFile(soc)
-    #user_data = {'user': str(file['user']), 'password': str(file['password']),
-    #            'IP': str(file['IP']), 'Port': str(file['Port']),
-    #            'command': str(file['command']),'Argument':str(file['Argument']),
-    #            'data': str(file['data']), 'path': str(file['path'])}
     user_data = json.dumps(file)
     user_data = ast.literal_eval(user_data)
     dir = ast.literal_eval(user_data['data'])
@@ -80,15 +77,24 @@ def exit(soc,user_data):
 def upload(file,soc,user_data):
     root, dirs, files = walk('.').next()
     print 'Files in current client directory:'
-    print files
+    for i in files:
+        print i
     print 'Folders in current client directory:'
-    print dirs
+    for i in dirs:
+        print i
+
     found = 0
     for i in files:
-        found = 1
-        makedirs('temp')
-        shutil.move(file[0],'temp')
-        file[0] = 'temp'
+        if i == file[0]:
+            found = 1
+            try:
+                makedirs('temp')
+            except OSError as e:
+                if e.errno == errno.EEXIST: # and path.isdir(path)
+                    pass
+            shutil.move(file[0],'temp')
+            #except:
+            #    pass
     for i in dirs:
         if i == file[0]:
             found = 1
@@ -97,7 +103,7 @@ def upload(file,soc,user_data):
         user_data['command'] = 'upload'
         user_data['Argument'] = file[0]
         pl.sendFile(user_data,soc)
-        shutil.make_archive(dirpath + '/' + file[0], 'zip', file[0])
+        shutil.make_archive(dirpath + '/' +file[0] , 'zip', 'temp')
         size = path.getsize(file[0]+'.zip')
         soc.send(str(size))
         Handshake = soc.recv(2)
@@ -108,7 +114,7 @@ def upload(file,soc,user_data):
                 while data:
                     soc.send(data)
                     data = f.read(1024)
-            remove('temp.zip')
+            remove(file[0]+'.zip')
             shutil.rmtree('temp', ignore_errors=True)
         else:
             print "Error to send file",file[0]," to Server."
@@ -117,7 +123,7 @@ def upload(file,soc,user_data):
 
 def download(file,soc,user_data):
     user_data['command'] = 'download'
-    user_data['Argument'] = file
+    user_data['Argument'] = file[0]
     pl.sendFile(user_data,soc)
     print 'User: ',user_data['user']
     print 'Downloading file: ', user_data['Argument']
@@ -134,6 +140,12 @@ def download(file,soc,user_data):
             if  rsize >= file_size:
                 break
     # Unzip file
+    print 'Download done!'
+    dirpath = getcwd()
+    zip_ref = zipfile.ZipFile(dirpath+'/'+file[0]+'.zip', 'r')
+    zip_ref.extractall(dirpath)
+    zip_ref.close()
+    remove(user_data['Argument']+'.zip')
     #remove(file['Argument'] + '.zip')
 
 if __name__ == "__main__":
