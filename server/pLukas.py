@@ -62,8 +62,10 @@ def service(refSocket,clientData,server_soc,root):
     if status:
         while online:
             sleep(0.1) #sync
+            #print file['path']
             file = receiveFile(refSocket)
-            file = sr.getPath(file,path)
+            path_dir = sr.getPath(file)
+            chdir(path_dir)
             #note(file,refSocket)
             log_file.append((file['command'],file['Argument']))
             if file['command'] == 'help':

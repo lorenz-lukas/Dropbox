@@ -77,24 +77,28 @@ def exit(soc,user_data):
 def upload(file,soc,user_data):
     root, dirs, files = walk('.').next()
     print 'Files in current client directory:'
+
     for i in files:
         print i
     print 'Folders in current client directory:'
+
     for i in dirs:
         print i
 
+    file_count = 0
     found = 0
+
+    try:
+        makedirs('temp')
+    except OSError as e:
+        if e.errno == errno.EEXIST: # and path.isdir(path)
+            pass
+    shutil.move(file[0],'temp')
+
     for i in files:
         if i == file[0]:
+            file_count = 1
             found = 1
-            try:
-                makedirs('temp')
-            except OSError as e:
-                if e.errno == errno.EEXIST: # and path.isdir(path)
-                    pass
-            shutil.move(file[0],'temp')
-            #except:
-            #    pass
     for i in dirs:
         if i == file[0]:
             found = 1

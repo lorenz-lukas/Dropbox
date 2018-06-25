@@ -47,10 +47,6 @@ def checkServer():
         chdir(root_path)
 
 def login(user, password):
-    try:
-        chdir('Home')
-    except OSError as e:
-        pass
     foundDB, db = DB()
     status = -1
     if foundDB:
@@ -215,18 +211,23 @@ def upload(file,soc):
 def download(file,soc):
     root, dirs, files = walk('.').next()
     found = 0
+    file_count = 0
+    try:
+        makedirs('temp')
+    except OSError as e:
+        if e.errno == errno.EEXIST: # and path.isdir(path)
+            pass
+    shutil.move(file['Argument'],'temp')
+
     for i in files:
         if i == file['Argument']:
+            file_count = 1
             found = 1
-            try:
-                makedirs('temp')
-            except OSError as e:
-                if e.errno == errno.EEXIST: # and path.isdir(path)
-                    pass
-            shutil.move(file['Argument'],'temp')
+
     for i in dirs:
         if i == file['Argument']:
             found = 1
+
     if found:
         dirpath = getcwd()
         shutil.make_archive(dirpath + '/' + file['Argument'], 'zip', 'temp')
@@ -249,13 +250,19 @@ def download(file,soc):
         file['data'] = 'File not found'
         pl.sendFile(file,soc)
 
-def getPath(file,current_directory):
-    if file['command'] == 'mv':
-        file['path'] = current_directory
-    else:
-        file['path'] = current_directory
-    #print file
-    return file
+def getPath(file):
+    dirpath = getcwd()
+    dir = dirpath.split('/')
+    p = ''
+    for i in xrange(len(dir)):
+        if dir[i] == 'Home':
+            p = dir[0:i]
+    dir = ''
+    for i in p:
+        dir+= i+'/'
+    dir+= file['path']
+    #print dir
+    return dir
 
 if __name__ == "__main__":
     sys.exit(main(sys.args))
